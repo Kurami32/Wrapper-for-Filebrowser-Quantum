@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary colors -->
+    <color name="cyan">#0090FF</color>
+    <color name="cyan_darker">#0004CB</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray">#9D9D9F</color>
+    <color name="gray_darker">#546E7A</color>
+    <!-- For the button -->
+    <color name="button_text_light">#FFFFFF</color>
+    <color name="button_text_dark">#FF000000</color>
+</resources>

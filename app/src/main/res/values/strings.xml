@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name" translatable="false">FileBrowser Quantum</string>
+    <string name="setup_title" translatable="false">FileBrowser Quantum</string>
+    <string name="enter_url_prompt">Enter the URL of your FileBrowser instance:</string>
+    <string name="url_hint">https://your-filebrowser-url.com</string>
+    <string name="save_url">Save</string>
+    <string name="app_logo_desc" translatable="false">FileBrowser Quantum Logo</string>
+    <string name="something_went_wrong">Something went wrong :(</string>
+    <string name="filebrowserq_connection">Please, verify if you have internet connection\nand if you FileBrowser Quantum Server is up</string>
+    <string name="network_err_reload">Reload Page</string>
+    <string name="connection_desc">Verify connection</string>
+</resources>

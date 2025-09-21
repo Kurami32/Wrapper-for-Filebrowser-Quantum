@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="enter_url_prompt">Introduce la URL de tu FIleBrowser server:</string>
+    <string name="url_hint">https://tu-filebrowser-url.com</string>
+    <string name="save_url">Guardar</string>
+    <string name="something_went_wrong">Algo salió mal :(</string>
+    <string name="filebrowserq_connection">Verifica si tienes conexión a internet, y si tu servidor de FileBrowser Quantum está activo.</string>
+    <string name="network_err_reload">Reintentar</string>
+    <string name="connection_desc">Verifica la conexión</string>
+</resources>
