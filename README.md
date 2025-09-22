@@ -24,7 +24,7 @@ Just enter your Filebrowser URL and click on the "save" button. (Don't forget th
 - I plan to add other minor things, like the hability for refresh the page with gestures!
 
 ## Important notes:
-- How this is a WebView, please, make sure that you have always up-to-date your webview component. If you are using another webview which is not the [default of the phone](https://play.google.com/store/apps/details?id=com.google.android.webview&hl=en-US), I'm not sure how the app will behave.
+- How this is a WebView app, please, make sure that you have always up-to-date your webview component. If you are using another webview which is not the [default of the phone](https://play.google.com/store/apps/details?id=com.google.android.webview&hl=en-US), I'm not sure how the app will behave.
 - This is just a wrapper, basically a mini-browser that is just loading a specific URL provided (in this case, your filebrowser domain).
 - If you found an issue related to this app, like a crash, the app not responding, etc. Feel free to open an issue here.
 - If you found an issue non-related to this app, and is on the website instead, please, go to the [filebrowser project repository](https://github.com/gtsteffaniak/filebrowser), and try to reach the dev there, he is very welcoming :)
