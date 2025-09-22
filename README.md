@@ -9,7 +9,7 @@ which is **search-focused**, my launcher don't let me add any "shortcut" to the 
 ## Usage
 > Note: You need to have you filebrowser quantum server up and running, please visit the [Filebrowser Quantum repository](https://github.com/gtsteffaniak/filebrowser), If you haven't already.
 
-Is very simple, just download the app from the realeses channel and install it on you desired device.
+Is very simple, just download the app from the [releases channel](https://github.com/Kurami32/Wrapper-for-Filebrowser-Quantum/releases/tag/v1.0.0) and install it on you desired device.
 When you open the app for the first time, you will have a screen like this:
 
 ![Startup_screen](https://github.com/user-attachments/assets/f7e5f049-dcb6-40cf-a69c-d360b67d0c4a)
