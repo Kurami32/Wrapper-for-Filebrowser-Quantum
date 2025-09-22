@@ -2,9 +2,13 @@
 This Android app is a simple WebView wrapper for the [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) project, one of the best self-hosted web-based file managers that ever existed!
 
 ## Why I made this app? 
-I know that you can currently install [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) as a webapp with your browser.
-But at least for me, I don´t like that approach, that's why this app exists. Just for name a few things, I'd like to have separate cookies and browser cache from my main browser, also that I have quick access on my launcher
+Well, I know that you can currently install [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) as a webapp with your browser.
+But at least for me, I don´t like that approach, that's why I made an app. Just for name a few things, I'd like to have separate cookies and browser cache from my main browser, also that I have quick access on my launcher
 which is **search-focused**, my launcher don't let me add any "shortcut" to the home screen that the browsers provides. And I think some users might be using a launcher similar to mine, or just those who would like to have it as a native-like app.
+
+I was using this app for personal use before, but I decided make available for everyone :D
+
+> Note: This is my first time doing an app and making a public project on github in general, if there are issues, or something I shouldn't have done, please, contact me. 
 
 ## Usage
 > Note: You need to have you filebrowser quantum server up and running, please visit the [Filebrowser Quantum repository](https://github.com/gtsteffaniak/filebrowser), If you haven't already.
@@ -24,10 +28,10 @@ Just enter your Filebrowser URL and click on the "save" button. (Don't forget th
 - I plan to add other minor things, like the hability for refresh the page with gestures!
 
 ## Important notes:
-- How this is a WebView app, please, make sure that you have always up-to-date your webview component. If you are using another webview which is not the [default of the phone](https://play.google.com/store/apps/details?id=com.google.android.webview&hl=en-US), I'm not sure how the app will behave.
+- How this is a WebView app, please, make sure that you have always up-to-date your webview component. If you are using another webview which is not the [default of Android](https://play.google.com/store/apps/details?id=com.google.android.webview&hl=en-US), I'm not sure how the app will behave.
 - This is just a wrapper, basically a mini-browser that is just loading a specific URL provided (in this case, your filebrowser domain).
 - If you found an issue related to this app, like a crash, the app not responding, etc. Feel free to open an issue here.
-- If you found an issue non-related to this app, and is on the website instead, please, go to the [filebrowser project repository](https://github.com/gtsteffaniak/filebrowser), and try to reach the dev there, he is very welcoming :)
+- If you found an issue non-related to this app; and is on the website instead, please, go to the [filebrowser project repository](https://github.com/gtsteffaniak/filebrowser), and try to reach the dev there, he is very welcoming :)
 
 ## Scrrenshots
 ![Startup screen](https://github.com/user-attachments/assets/1c066d52-7130-4e9a-a5c6-07c8aaf5832d)
