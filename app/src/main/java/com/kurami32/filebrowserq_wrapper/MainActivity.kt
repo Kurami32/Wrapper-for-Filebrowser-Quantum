@@ -393,6 +393,13 @@ class MainActivity : AppCompatActivity() {
                 // Fallback to URLUtil.guessFileName (just in case)
                 var fileName = fromCd ?: fromQuery ?: URLUtil.guessFileName(url, contentDisposition, mimetype)
 
+                // Decode URL-encoded characters in the filename (like %20, for replace them with spaces)
+                fileName = try {
+                    URLDecoder.decode(fileName, "UTF-8")
+                } catch (_: Exception) {
+                    fileName // Fallback to original if decoding fails
+                }
+
                 // Determine the algorithm parameter, for example, when you download a folder. On filebrowser you had two options for this ".zip" and ".tar.gz"
                 val parsedUri = url.toUri()
                 val algo = parsedUri.getQueryParameter("algo")
