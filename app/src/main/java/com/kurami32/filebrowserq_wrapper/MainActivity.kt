@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -34,6 +35,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import java.net.URLDecoder
@@ -54,6 +56,10 @@ class MainActivity : AppCompatActivity() {
     // For error view
     private lateinit var errorView: View
     private lateinit var reloadButton: Button
+
+    // Gesture detection properties
+    private var lastGestureTime = 0L
+    private val gestureCooldown = 1000L // Prevent multiple triggers in quick succession
 
     private val tag = "MainActivity"
     private var hasError = false // Track if we've already shown an error
@@ -139,6 +145,12 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = true
             mediaPlaybackRequiresUserGesture = false // If is true, you will need to manually click on play, I let it on false because filebrowser web already handle this.
         }
+
+        // Disable scroll bars for use the custom ones from filebrowser.
+        webView.isVerticalScrollBarEnabled = false
+        webView.isHorizontalScrollBarEnabled = false
+        webView.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+        webView.overScrollMode = View.OVER_SCROLL_NEVER
 
         // Set WebChromeClient for enable the fullscreen support, if not the "fullscreen" button will be disabled. Also enables other events that you normally expect on a browser
         webView.webChromeClient = object : WebChromeClient() {
@@ -419,6 +431,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Setup gesture detection AFTER all WebView configuration
+        setupGestureDetection()
+
         // Load the initial URL
         if (url.isNotBlank()) {
             if (isNetworkAvailable()) {
@@ -441,8 +456,8 @@ class MainActivity : AppCompatActivity() {
                 // Use the exported flag overload on API 33+
                 registerReceiver(downloadFinishedReceiver, filter, RECEIVER_NOT_EXPORTED)
             } //else {
-              //  registerReceiver(downloadFinishedReceiver, filter)
-           // }
+            //  registerReceiver(downloadFinishedReceiver, filter)
+            // }
         }
 
         // Update the back button to handle fullscreen exit
@@ -461,6 +476,112 @@ class MainActivity : AppCompatActivity() {
         }
         onBackPressedDispatcher.addCallback(this, callback)
     }
+
+    // Gesture detection for reload and delete cookies
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupGestureDetection() {
+        var startY = 0f
+        var fingerCount = 0
+        var gestureTriggered = false
+
+        webView.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_POINTER_DOWN -> {
+                    // When additional fingers are added
+                    fingerCount = event.pointerCount
+                    startY = event.getY(0) // Use first finger's Y position
+                    gestureTriggered = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if ((fingerCount == 2 || fingerCount == 3) && !gestureTriggered) {
+                        val currentY = event.getY(0)
+                        val deltaY = currentY - startY
+
+                        // Check if it's a significant downward swipe (more than 280 pixels)
+                        if (deltaY > 280) {
+                            val currentTime = System.currentTimeMillis()
+                            if (currentTime - lastGestureTime > gestureCooldown) {
+                                gestureTriggered = true
+                                when (fingerCount) {
+                                    2 -> {
+                                        handleTwoFingerGesture()
+                                        lastGestureTime = currentTime
+                                    }
+                                    3 -> {
+                                        handleThreeFingerGesture()
+                                        lastGestureTime = currentTime
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                    // Reset when fingers are lifted
+                    fingerCount = 0
+                    gestureTriggered = false
+                }
+            }
+            false
+        }
+    }
+
+    private fun handleTwoFingerGesture() {
+        runOnUiThread {
+            if (::webView.isInitialized) {
+                webView.reload()
+                Toast.makeText(this, "Page reloaded 🔄", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun handleThreeFingerGesture() {
+        runOnUiThread {
+            showClearCookiesConfirmation()
+        }
+    }
+
+     private fun showClearCookiesConfirmation() {
+         AlertDialog.Builder(this)
+             .setTitle("Clear All Cookies")
+             .setMessage("Are you sure you want to clear the cookies?")
+             .setPositiveButton("Clear") { dialog, _ ->
+                 clearAllCookies()
+                 dialog.dismiss()
+             }
+             .setNegativeButton("Cancel") { dialog, _ ->
+                 dialog.dismiss()
+             }
+             .setIcon(android.R.drawable.ic_dialog_alert)
+             .show()
+     }
+
+     private fun clearAllCookies() {
+         try {
+             val cookieManager = CookieManager.getInstance()
+
+             cookieManager.removeAllCookies { success ->
+                 runOnUiThread {
+                     if (success) {
+                         cookieManager.flush()
+                         Toast.makeText(this, "All cookies cleared ✅", Toast.LENGTH_LONG).show()
+
+                         // Reload the page to reflect the changes
+                         if (::webView.isInitialized && webView.url != null) {
+                             webView.reload()
+                         }
+                     } else {
+                         Toast.makeText(this, "Failed to clear cookies ❌", Toast.LENGTH_SHORT).show()
+                     }
+                 }
+             }
+         } catch (e: Exception) {
+             runOnUiThread {
+                 Toast.makeText(this, "Error clearing cookies: ${e.message}", Toast.LENGTH_SHORT).show()
+                 Log.e(tag, "Error clearing cookies", e)
+             }
+         }
+     }
 
     // Helper method to show error view
     private fun showErrorView() {
