@@ -2,7 +2,7 @@
 This Android app is a simple WebView wrapper for the [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) project, one of the best self-hosted web-based file managers that ever existed!
 
 ## Why I made this app? 
-Well, you can install [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) as a webapp with your browser, this is possible thanks to the progressive web app technology that the browsers offer, **but** is only limited to the home screen.
+Well, you can install [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) as a webapp with your browser, this is possible thanks to the progressive web app technology that the browsers (and filebrowser) offer, **but is only limited to the home screen**.
 
 I don't liked that... And that's why I made this app. I'd like to have separate cookies, browser cache from my main browser, and have quick access on my launcher
 which is **search-focused**. My launcher don't let me add any "shortcut" to the home screen which is the only option that the browsers offer. And I think some users might be using a launcher similar to mine, or just those who would like to have it as a native-like app on their app drawer.
@@ -46,8 +46,8 @@ Be cautious if you enter any other URL, or if you enter your URL wrong, you will
 | Upload toast notification | Download toast notification | Download/upload finished toast |
 
 ## Contributions
-Feel free to open a PR if you think that something on the webview app could be improved/fixed! :D
-See [Contributing](CONTRIBUTING.md)
+Feel free to open an issue or PR if you think that something on the webview app could be improved/fixed! :D
+Also, don't forget to see [Contributing](CONTRIBUTING.md)
 
 ## Licence
 The code of the WebView app is licensed under the [MIT License](LICENSE).
