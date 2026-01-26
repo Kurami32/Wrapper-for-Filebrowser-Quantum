@@ -1,26 +1,27 @@
 # Webview wrapper for Filebrowser Quantum
 This Android app is a simple WebView wrapper for the [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) project, one of the best self-hosted web-based file managers that ever existed!
 
-## Why I made this app? 
-Well, you can install [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) as a webapp with your browser, this is possible thanks to the progressive web app technology that the browsers (and filebrowser) offer, **but is only limited to the home screen**.
+You can install [Filebrowser Quantum](https://github.com/gtsteffaniak/filebrowser) as a webapp within your browser as PWA (Progressive Web App) it works fine but is limited only to the home screen.
 
-I don't liked that... And that's why I made this app. I'd like to have separate cookies, browser cache from my main browser, and have quick access on my launcher
-which is **search-focused**. My launcher don't let me add any "shortcut" to the home screen which is the only option that the browsers offer. And I think some users might be using a launcher similar to mine, or just those who would like to have it as a native-like app on their app drawer.
+That's why I made this app (also because I'd like to have separate cookies and cache from my main browser). 
 
-Before, I was using this app for my personal usecase, but I decided make it available for everyone :D
+The app is just like any other app of your phone, it should appear in the app drawer of your launcher  letting you have a quick access -- also is searchable, allowing search-focused launchers find the app quickly.
 
-> This is my first time doing an app, and making a public project on github in general, if there are issues, or something I shouldn't have done, please, tell me, you can reach me on a discussion, issues or simply by my email.
+> This is my first time doing an android app, and is also the first public project in GitHub, if there are issues or something, you can tell me, and will try to fix it :)
 
 ## Usage
-> Note: You need to have you filebrowser quantum server up and running, please visit the [Filebrowser Quantum repository](https://github.com/gtsteffaniak/filebrowser), If you haven't already.
+> [!NOTE]
+> You'll need to have a FileBrowser Quantum server running to use the app, if you are new to the Project, visit the [Filebrowser Quantum repository](https://github.com/gtsteffaniak/filebrowser) if you haven't already.
 
-Is very simple, just download the app from the [releases channel](https://github.com/Kurami32/Wrapper-for-Filebrowser-Quantum/releases) and install it on you desired device.
-When you open the app for the first time, you will have a screen like this:
+To use the app is very simple, just download the app from the [releases](https://github.com/Kurami32/Wrapper-for-Filebrowser-Quantum/releases) and install it on you desired device.
+
+Opening the app for the first time, you will have a screen like this:
 
 | <img width="350" src="screenshots/example.jpg"> | 
 |:---:| 
 
 Just enter your Filebrowser URL and click on the "save" button. (Don't forget that the URL must contain `http://` or `https://` at the start).
+
 Be cautious if you enter any other URL, or if you enter your URL wrong, you will need to clear the app data from android settings if you do.
 
 ## Features
@@ -46,8 +47,10 @@ Be cautious if you enter any other URL, or if you enter your URL wrong, you will
 | Upload toast notification | Download toast notification | Download/upload finished toast |
 
 ## Contributions
-Feel free to open an issue or PR if you think that something on the webview app could be improved/fixed! :D
-Also, don't forget to see [Contributing](CONTRIBUTING.md)
+You can contribute with GitHub issues if you find something not working.
+
+You can also open a PR if you want to improve something.
 
 ## Licence
-The code of the WebView app is licensed under the [MIT License](LICENSE).
+This repo uses the [MIT License](LICENSE).
+Feel free to use anything of the code :)
