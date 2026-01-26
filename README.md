@@ -15,28 +15,27 @@ The app is just like any other app of your phone, it should appear in the app dr
 
 To use the app is very simple, just download the app from the [releases](https://github.com/Kurami32/Wrapper-for-Filebrowser-Quantum/releases) and install it on you desired device.
 
-Opening the app for the first time, you will have a screen like this:
+When you open the app for the first time you will have a screen like this:
 
 | <img width="350" src="screenshots/example.jpg"> | 
 |:---:| 
 
-Just enter your Filebrowser URL and click on the "save" button. (Don't forget that the URL must contain `http://` or `https://` at the start).
+Just enter the URL of your FBQ server and click on the "save" button -- Don't forget that the URL must contain `http://` or `https://` at the begin :p
 
-Be cautious if you enter any other URL, or if you enter your URL wrong, you will need to clear the app data from android settings if you do.
+> [!IMPORTANT]
+> Be cautious if you enter any other URL, or if you do a typo while setting the URL.
+> If you do, just delete the app data from android settings to start again.
+> The same applies if you want to change to other URL.
 
 ## Features
-- Is like any other app that you have on your phone, you can search it if you have a lot of apps with the app drawer of your phone launcher.
-- Custom toast notification when uploading or downloading a file.
-- Custom screen when there is no connection.
-- Improved performance, this is possible thanks to hardware acceleration.
-- Ability to refresh the page with two finger swipe down gesture.
-- Ability to **delete cookies** with three finger swipe down gesture.
+Some features that this app has over the PWA are:
 
-## Important notes
-- How this is a WebView app, please, make sure that you have always up-to-date your webview component. If you are using another webview which is not the [default of Android](https://play.google.com/store/apps/details?id=com.google.android.webview&hl=en-US), I'm not sure how the app will behave.
-- This is just a wrapper, basically a "mini-browser" that is just loading a specific URL provided (in this case, your filebrowser domain).
-- If you found an issue related to this app, like a crash, the app not responding, etc. Feel free to open an issue **here**.
-- If you found an issue non-related to this app (you find something on the WebUI or with filebrowser itself), please, go to the [filebrowser repository](https://github.com/gtsteffaniak/filebrowser), and try to reach the dev there, he is very welcoming :)
+- Is like any other app on your phone, you can search it with the launcher of your phone.
+- Has a custom toast notification when uploading or downloading a file.
+- Custom screen when there is no connection or the server is unreachable.
+- Improved performance thanks to hardware acceleration.
+- You can refresh the page using two (2) fingers swipe down gesture ⬇⬇
+- You can also **delete cookies** using three (3) fingers swipe down gesture! ⬇⬇⬇
 
 ## Screenshots
 
@@ -46,11 +45,18 @@ Be cautious if you enter any other URL, or if you enter your URL wrong, you will
 | <img width="256" src="screenshots/upload-toast-notification.jpg"> | <img width="256" src="screenshots/download-toast.jpg"> | <img width="256" src="screenshots/download-finished-toast.jpg"> |
 | Upload toast notification | Download toast notification | Download/upload finished toast |
 
-## Contributions
-You can contribute with GitHub issues if you find something not working.
+## Important notes
+- How this is a WebView app, make sure that you always have up-to-date your webview component. I have tested this using the default [WebView](https://play.google.com/store/apps/details?id=com.google.android.webview) that comes in most devices, so, if you are using some custom webview I'm not sure if the app will work.
+- This is just a wrapper, it just loads a specific URL provided -- In this case will load our filebrowser web page and render it in WebView :)
+- If you find some issue, like a crash, the app not responding... Open an issue here and I'll try to fix it.
+- If you find some issue non-related to the app, but instead you find something on the WebUI, go to the [FBQ repo](https://github.com/gtsteffaniak/filebrowser), and open an issue there. (But first test if is an issue related to my app by just trying to replicate in a normal browser)
 
-You can also open a PR if you want to improve something.
+## Know issues
+The only issue is that you can't upload folders with the android filepicker, I don't know how to make it work to open the folder picker when pressing the folder button in the FBQ UI in the upload prompt.
+If you know how to fix it a PR would be apprecited :D
+
+## Contributions
+You can contribute with GitHub issues if you find something not working, or~ you can also open a PR if you want to improve something.
 
 ## Licence
-This repo uses the [MIT License](LICENSE).
-Feel free to use anything of the code :)
+This repo uses the [MIT License](LICENSE), feel free to use anything of the code :)
