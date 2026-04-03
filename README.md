@@ -37,6 +37,8 @@ Some features that this app has over the PWA are:
 - You can refresh the page using two (2) fingers swipe down gesture ⬇⬇
 - You can also **delete cookies** using three (3) fingers swipe down gesture! ⬇⬇⬇
 
+If I had to mention a disavintage, is that you won't have media session (the notification with controls) when playing media files, which can be fixed by implementing exo player I think. But that also will make the app more bigger.
+
 ## Screenshots
 
 | <img width="256" src="screenshots/setup-screen.jpg"> | <img width="256" src="screenshots/network-error-screen.jpg"> | <img width="256" src="screenshots/cookie-warning.jpg"> |
@@ -52,8 +54,10 @@ Some features that this app has over the PWA are:
 - If you find some issue non-related to the app, but instead you find something on the WebUI, go to the [FBQ repo](https://github.com/gtsteffaniak/filebrowser), and open an issue there. (But first test if is an issue related to my app by just trying to replicate in a normal browser)
 
 ## Know issues
-The only issue is that you can't upload folders with the android filepicker, I don't know how to make it work to open the folder picker when pressing the folder button in the FBQ UI in the upload prompt.
-If you know how to fix it a PR would be apprecited :D
+One issue is that you can't upload folders with the android filepicker, I don't know how to make it work to open the folder picker when pressing the folder button in the FBQ UI in the upload prompt.
+If you know how to fix it a PR would be appreciated :D
+
+Another issue is that if you have chunked downloads enabled in FBQ, it will not download the file, I'm not sure if this a WebView limitation or something else... I hadn't time to look into this.
 
 ## Contributions
 You can contribute with GitHub issues if you find something not working, or~ you can also open a PR if you want to improve something.
