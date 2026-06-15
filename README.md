@@ -28,9 +28,13 @@ Just enter the URL of your FBQ server and click on the "save" button -- Don't fo
 > The same applies if you want to change to other URL.
 
 ## Features
-Some features that this app has over the PWA are:
+> [!NOTE]
+> Since Filebrowser Quantum is having many PWA improvements lately (as of [v1.5.0-beta](https://github.com/gtsteffaniak/filebrowser/releases/tag/v1.5.0-beta), this app may fall behind in feats.  However, this app remains
+> as an alternative to the PWA for those that don't need those features, or those that can't install PWAs due to some limitation (like launchers) :)
 
-- Is like any other app on your phone, you can search it with the launcher of your phone.
+Some features that this app has are:
+
+- Is like any other app on your phone.
 - Has a custom toast notification when uploading or downloading a file.
 - Custom screen when there is no connection or the server is unreachable.
 - Improved performance thanks to hardware acceleration.
