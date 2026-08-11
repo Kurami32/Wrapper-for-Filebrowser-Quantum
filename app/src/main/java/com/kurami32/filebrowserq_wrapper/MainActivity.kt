@@ -41,6 +41,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import java.net.URLDecoder
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicLong
 
 class MainActivity : AppCompatActivity() {
   private lateinit var webView: WebView
@@ -49,6 +52,12 @@ class MainActivity : AppCompatActivity() {
   private lateinit var downloadManager: DownloadManager
   private lateinit var prefs: SharedPreferences
   private var filePathCallback: ValueCallback<Array<Uri>>? = null // This is the callback for file uploads
+  private val requestIdGenerator = AtomicLong(0)
+  private var activeRequestId: Long = 0L
+  private var isActivityDestroyed = false
+  private val folderScanExecutor = Executors.newSingleThreadExecutor()
+  private var folderScanFuture: Future<*>? = null
+  private var pendingFolderRequestId: Long = 0L
 
   // Set with a JS bridge, from an injected click listener.
   @Volatile
@@ -98,10 +107,14 @@ class MainActivity : AppCompatActivity() {
   // so we launch it manually and the resulting tree is walked to collect every file inside it.
   private val folderChooserLauncher =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      val requestId = pendingFolderRequestId
+      val callback = filePathCallback
       val treeUri = if (result.resultCode == RESULT_OK) result.data?.data else null
       if (treeUri == null) {
-        filePathCallback?.onReceiveValue(null)
-        filePathCallback = null
+        if (activeRequestId == requestId) {
+          callback?.onReceiveValue(null)
+          filePathCallback = null
+        }
         return@registerForActivityResult
       }
 
@@ -111,11 +124,14 @@ class MainActivity : AppCompatActivity() {
         Log.w(tag, "Could not persist tree permission", e)
       }
       // Walking the tree can be slow, so better we left it off the main thread
-      Thread {
+      folderScanFuture = folderScanExecutor.submit {
+        if (activeRequestId != requestId || isActivityDestroyed) return@submit
+
         val entries = collectFilesFromTree(treeUri)
         runOnUiThread {
+          if (activeRequestId != requestId || isActivityDestroyed) return@runOnUiThread
           if (entries.isEmpty()) {
-            filePathCallback?.onReceiveValue(null)
+            callback?.onReceiveValue(null)
             filePathCallback = null
             return@runOnUiThread
           }
@@ -127,11 +143,13 @@ class MainActivity : AppCompatActivity() {
           val script = "window.__pendingFolderRelativePaths = $pathsJson;"
 
           webView.evaluateJavascript(script) {
-            filePathCallback?.onReceiveValue(entries.map { it.first }.toTypedArray())
-            filePathCallback = null
+            if (activeRequestId == requestId && !isActivityDestroyed) {
+              callback?.onReceiveValue(entries.map { it.first }.toTypedArray())
+              filePathCallback = null
+            }
           }
         }
-      }.start()
+      }
     }
 
   private fun folderPickerDetection(view: WebView?) {
@@ -339,6 +357,7 @@ class MainActivity : AppCompatActivity() {
       ): Boolean {
         filePathCallback?.onReceiveValue(null) // First clear any previous callback for then
         filePathCallback = filePathCallbackParam // store new ones
+        activeRequestId = requestIdGenerator.incrementAndGet()
 
         // webkitdirectory+multiple inputs are reported as MODE_OPEN_MULTIPLE, and well, it doesn't differentiate
         // from the multi-file input, so we let our script above be the signal instead.
@@ -346,6 +365,7 @@ class MainActivity : AppCompatActivity() {
         pendingFolderPick = false
 
         if (isFolderPick) {
+          pendingFolderRequestId = activeRequestId
           return try {
             folderChooserLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
             true
@@ -766,13 +786,15 @@ class MainActivity : AppCompatActivity() {
   }
 
   override fun onDestroy() {
+    isActivityDestroyed = true
+    folderScanFuture?.cancel(true)
+    folderScanExecutor.shutdownNow()
     // Clean up resources to avoid memory leaks.
     try {
       unregisterReceiver(downloadFinishedReceiver)
     } catch (_: IllegalArgumentException) {
       //
     }
-
     try {
       webView.stopLoading()
       webView.loadUrl("about:blank") // Clear the previous webview content and load the URL saved again.
@@ -781,7 +803,6 @@ class MainActivity : AppCompatActivity() {
     } catch (e: Exception) {
       Log.w(tag, "Error while destroying WebView", e)
     }
-
     super.onDestroy()
   }
 }
