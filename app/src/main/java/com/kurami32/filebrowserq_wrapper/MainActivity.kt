@@ -41,6 +41,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import java.net.URLDecoder
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicLong
@@ -126,8 +127,11 @@ class MainActivity : AppCompatActivity() {
       // Walking the tree can be slow, so better we left it off the main thread
       folderScanFuture = folderScanExecutor.submit {
         if (activeRequestId != requestId || isActivityDestroyed) return@submit
-
-        val entries = collectFilesFromTree(treeUri)
+        val entries = try {
+          collectFilesFromTree(treeUri)
+        } catch (_: CancellationException) {
+          return@submit
+        }
         runOnUiThread {
           if (activeRequestId != requestId || isActivityDestroyed) return@runOnUiThread
           if (entries.isEmpty()) {
@@ -211,7 +215,9 @@ class MainActivity : AppCompatActivity() {
     val result = mutableListOf<Pair<Uri, String>>()
 
     fun walk(dir: DocumentFile, relPath: String) {
+      if (Thread.currentThread().isInterrupted) throw CancellationException()
       for (child in dir.listFiles()) {
+        if (Thread.currentThread().isInterrupted) throw CancellationException()
         val childPath = "$relPath/${child.name}"
         if (child.isDirectory) {
           walk(child, childPath)
