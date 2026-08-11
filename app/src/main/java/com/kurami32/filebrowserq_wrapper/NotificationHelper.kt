@@ -39,7 +39,11 @@ class NotificationHelper(private val context: Context) {
       return
     }
 
-    val intent = Intent(context, MainActivity::class.java).apply {
+    val intent = Intent().apply {
+      setClassName(context.packageName, MainActivity::class.java.name)
+      `package` = context.packageName
+      action = null
+      data = null
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     }
 
