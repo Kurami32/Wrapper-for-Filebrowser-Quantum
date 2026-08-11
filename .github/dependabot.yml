@@ -25,3 +25,8 @@ updates:
           - "androidx.*"
           - "com.google.*"
           - "com.android.*"
+    ignore:
+      - dependency-name: "io.netty:*"
+      - dependency-name: "org.bouncycastle:*"
+      - dependency-name: "org.bitbucket.b_c:*"
+      - dependency-name: "org.apache.httpcomponents:*"
