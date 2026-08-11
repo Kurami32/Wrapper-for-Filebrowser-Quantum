@@ -13,6 +13,7 @@ updates:
         patterns:
           - "androidx.*"
           - "com.google.*"
+          - "com.android.*"
         update-types:
           - "minor"
           - "patch"
@@ -23,3 +24,4 @@ updates:
         exclude-patterns:
           - "androidx.*"
           - "com.google.*"
+          - "com.android.*"
