@@ -1,3 +1,3 @@
 object PassName {
-    var NameFile: String = ""
+  var NameFile: String = ""
 }
