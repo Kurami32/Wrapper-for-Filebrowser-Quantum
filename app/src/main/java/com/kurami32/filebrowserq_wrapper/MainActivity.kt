@@ -21,6 +21,7 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.webkit.ValueCallback
@@ -38,7 +39,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import java.net.URLDecoder
+import java.util.concurrent.CancellationException
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicLong
 
 class MainActivity : AppCompatActivity() {
   private lateinit var webView: WebView
@@ -47,6 +53,24 @@ class MainActivity : AppCompatActivity() {
   private lateinit var downloadManager: DownloadManager
   private lateinit var prefs: SharedPreferences
   private var filePathCallback: ValueCallback<Array<Uri>>? = null // This is the callback for file uploads
+  private val requestIdGenerator = AtomicLong(0)
+  private var activeRequestId: Long = 0L
+  private var isActivityDestroyed = false
+  private val folderScanExecutor = Executors.newSingleThreadExecutor()
+  private var folderScanFuture: Future<*>? = null
+  private var pendingFolderRequestId: Long = 0L
+
+  // Set with a JS bridge, from an injected click listener.
+  @Volatile
+  private var pendingFolderPick = false
+
+  inner class WebAppInterface {
+    @Suppress("unused") // called from injected js with window.AndroidFileChooser, not from Kotlin
+    @JavascriptInterface
+    fun markNextChooserAsFolder() {
+      pendingFolderPick = true
+    }
+  }
 
   // Fullscreen support
   private var customView: View? = null
@@ -79,6 +103,132 @@ class MainActivity : AppCompatActivity() {
       filePathCallback?.onReceiveValue(results) // then passes the array of URIs back to webview and upload the files
       filePathCallback = null // clear callback
     }
+
+  // The folder picker <input webkitdirectory> doesn't build a proper ACTION_OPEN_DOCUMENT_TREE intent for MODE_OPEN_FOLDER
+  // so we launch it manually and the resulting tree is walked to collect every file inside it.
+  private val folderChooserLauncher =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      val requestId = pendingFolderRequestId
+      val callback = filePathCallback
+      val treeUri = if (result.resultCode == RESULT_OK) result.data?.data else null
+      if (treeUri == null) {
+        if (activeRequestId == requestId) {
+          callback?.onReceiveValue(null)
+          filePathCallback = null
+        }
+        return@registerForActivityResult
+      }
+
+      try {
+        contentResolver.takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      } catch (e: Exception) {
+        Log.w(tag, "Could not persist tree permission", e)
+      }
+      // Walking the tree can be slow, so better we left it off the main thread
+      folderScanFuture = folderScanExecutor.submit {
+        if (activeRequestId != requestId || isActivityDestroyed) return@submit
+        val entries = try {
+          collectFilesFromTree(treeUri)
+        } catch (_: CancellationException) {
+          return@submit
+        }
+        runOnUiThread {
+          if (activeRequestId != requestId || isActivityDestroyed) return@runOnUiThread
+          if (entries.isEmpty()) {
+            callback?.onReceiveValue(null)
+            filePathCallback = null
+            return@runOnUiThread
+          }
+          // Webview doesn't compute webkitRelativePath for files this way (only does for MODE_OPEN_FOLDER, which we bypass)
+          // We know the real paths from the tree walk above, so hand them to the page and let the script patch each file
+          // object before fbq own change handler reads the relative paths.
+          val pathsJson = org.json.JSONArray()
+          entries.forEach { (_, path) -> pathsJson.put(path) }
+          val script = "window.__pendingFolderRelativePaths = $pathsJson;"
+
+          webView.evaluateJavascript(script) {
+            if (activeRequestId == requestId && !isActivityDestroyed) {
+              callback?.onReceiveValue(entries.map { it.first }.toTypedArray())
+              filePathCallback = null
+            }
+          }
+        }
+      }
+    }
+
+  private fun folderPickerDetection(view: WebView?) {
+    val script = """
+      (function() {
+        if (window.__androidFolderDetectionInstalled) return;
+        window.__androidFolderDetectionInstalled = true;
+        function attach(el) {
+          if (el.__androidFolderHooked) return;
+          el.__androidFolderHooked = true;
+          el.addEventListener('click', function() {
+            if (window.AndroidFileChooser) {
+              window.AndroidFileChooser.markNextChooserAsFolder();
+            }
+          }, true);
+        }
+        function scan(root) {
+          if (!root.querySelectorAll) return;
+          root.querySelectorAll('input[webkitdirectory]').forEach(attach);
+        }
+        scan(document);
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(m) {
+            m.addedNodes.forEach(function(node) {
+              if (node.nodeType !== 1) return;
+              if (node.matches && node.matches('input[webkitdirectory]')) attach(node);
+              scan(node);
+            });
+          });
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+
+        // Capture before any listener bound directly on the input, so this always wins regardless.
+        document.addEventListener('change', function(e) {
+          var el = e.target;
+          if (!el || !el.matches || !el.matches('input[webkitdirectory]')) return;
+          var paths = window.__pendingFolderRelativePaths;
+          if (!paths) return;
+          var files = el.files;
+          for (var i = 0; i < files.length; i++) {
+            if (paths[i]) {
+              try {
+                Object.defineProperty(files[i], 'webkitRelativePath', {
+                  value: paths[i], writable: false, configurable: true, enumerable: true
+                });
+              } catch (err) { /* ignore */ }
+            }
+          }
+          window.__pendingFolderRelativePaths = null;
+        }, true);
+      })();
+    """.trimIndent()
+    view?.evaluateJavascript(script, null)
+  }
+
+  private fun collectFilesFromTree(treeUri: Uri): List<Pair<Uri, String>> {
+    val root = DocumentFile.fromTreeUri(this, treeUri) ?: return emptyList()
+    val rootName = root.name ?: "folder"
+    val result = mutableListOf<Pair<Uri, String>>()
+
+    fun walk(dir: DocumentFile, relPath: String) {
+      if (Thread.currentThread().isInterrupted) throw CancellationException()
+      for (child in dir.listFiles()) {
+        if (Thread.currentThread().isInterrupted) throw CancellationException()
+        val childPath = "$relPath/${child.name}"
+        if (child.isDirectory) {
+          walk(child, childPath)
+        } else if (child.isFile) {
+          result.add(child.uri to childPath)
+        }
+      }
+    }
+    walk(root, rootName)
+    return result
+  }
 
   // Receiver for the custom action sent by DownloadReceiver
   private val downloadFinishedReceiver = object : BroadcastReceiver() {
@@ -146,6 +296,7 @@ class MainActivity : AppCompatActivity() {
       mediaPlaybackRequiresUserGesture = false // If is true, you will need to manually click on play, I let it on false because filebrowser web already handle this.
     }
 
+    webView.addJavascriptInterface(WebAppInterface(), "AndroidFileChooser")
     // Disable scroll bars for use the custom ones from filebrowser.
     webView.isVerticalScrollBarEnabled = false
     webView.isHorizontalScrollBarEnabled = false
@@ -212,6 +363,25 @@ class MainActivity : AppCompatActivity() {
       ): Boolean {
         filePathCallback?.onReceiveValue(null) // First clear any previous callback for then
         filePathCallback = filePathCallbackParam // store new ones
+        activeRequestId = requestIdGenerator.incrementAndGet()
+
+        // webkitdirectory+multiple inputs are reported as MODE_OPEN_MULTIPLE, and well, it doesn't differentiate
+        // from the multi-file input, so we let our script above be the signal instead.
+        val isFolderPick = pendingFolderPick
+        pendingFolderPick = false
+
+        if (isFolderPick) {
+          pendingFolderRequestId = activeRequestId
+          return try {
+            folderChooserLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
+            true
+          } catch (e: Exception) {
+            Log.e(tag, "Failed to launch folder picker", e)
+            filePathCallback?.onReceiveValue(null)
+            filePathCallback = null
+            false
+          }
+        }
 
         val intent = try {
           fileChooserParams?.createIntent()
@@ -250,6 +420,7 @@ class MainActivity : AppCompatActivity() {
       // When the page loads, hide the progress bar.
       override fun onPageFinished(view: WebView?, url: String?) {
         progressBar.visibility = View.GONE
+        folderPickerDetection(view)
         super.onPageFinished(view, url)
       }
 
@@ -284,25 +455,6 @@ class MainActivity : AppCompatActivity() {
           val errorCode = error?.errorCode ?: 0
 
           // Only show error for connection-related errors
-          if (errorCode == ERROR_CONNECT || errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT) {
-            hasError = true
-            showErrorView()
-          }
-        }
-      }
-
-      @Suppress("DEPRECATION") // For older API support
-      override fun onReceivedError(
-        view: WebView?,
-        errorCode: Int,
-        description: String?,
-        failingUrl: String?
-      ) {
-        super.onReceivedError(view, errorCode, description, failingUrl)
-
-        // Only show error if we haven't already shown one
-        if (!hasError) {
-          // Only show error for connection-related error
           if (errorCode == ERROR_CONNECT || errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT) {
             hasError = true
             showErrorView()
@@ -640,13 +792,15 @@ class MainActivity : AppCompatActivity() {
   }
 
   override fun onDestroy() {
+    isActivityDestroyed = true
+    folderScanFuture?.cancel(true)
+    folderScanExecutor.shutdownNow()
     // Clean up resources to avoid memory leaks.
     try {
       unregisterReceiver(downloadFinishedReceiver)
     } catch (_: IllegalArgumentException) {
       //
     }
-
     try {
       webView.stopLoading()
       webView.loadUrl("about:blank") // Clear the previous webview content and load the URL saved again.
@@ -655,7 +809,6 @@ class MainActivity : AppCompatActivity() {
     } catch (e: Exception) {
       Log.w(tag, "Error while destroying WebView", e)
     }
-
     super.onDestroy()
   }
 }
